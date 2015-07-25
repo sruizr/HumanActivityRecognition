@@ -12,7 +12,7 @@ cleanHARdata  <- function(HARdata){
      
      # Remove columns with more than 95% with NAs
      
-     
+     cla
      
      
 }

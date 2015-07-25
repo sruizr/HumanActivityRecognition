@@ -1,9 +1,6 @@
 
 # Loading testing data
-testingFile  <- "./RawData/testing.csv"
-testingURL <-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
-downloadDataset(testingURL, testingFile) # function defined on LoadTrainingData.R
-testing <- read.csv( "./RawData/testing.csv")
+testing <- readHARdataset( "testing")
 
 # Predicting answers
 testing <- preprocess(testing)

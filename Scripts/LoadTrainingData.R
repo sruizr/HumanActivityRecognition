@@ -1,3 +1,5 @@
+#Chunk 1
+
 downloadDataset <- function(URL="", destFile="data.csv"){
 # Function to download the csv file with th data
      if(!file.exists(destFile)){
@@ -14,6 +16,5 @@ readHARdataset  <- function(dataType = ""){
      read.csv(destFile, header = TRUE, na.strings = c("NA", "", "#DIV/0!"))
 }
 
+#Chunk 2
 training  <- readHARdataset("training")
-
-
