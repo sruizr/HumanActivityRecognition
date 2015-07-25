@@ -7,8 +7,13 @@ downloadDataset <- function(URL="", destFile="data.csv"){
      }
 }
 
-trainingURL<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-trainingFile  <- "./RawData/training.csv"
-downloadDataset(trainingURL, trainingFile)
-training <- read.csv("./RawData/training.csv", stringsAsFactors = FALSE)
+readHARdataset  <- function(dataType = ""){
+     URLfile  <- paste0("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-", dataType, ".csv")
+     destFile  <- paste0("./RawData/", dataType, ".csv")
+     downloadDataset(URLfile, destFile)
+     read.csv(destFile, header = TRUE, na.strings = c("NA", "", "#DIV/0!"))
+}
+
+training  <- readHARdataset("training")
+
 

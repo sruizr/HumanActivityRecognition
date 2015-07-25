@@ -3,7 +3,7 @@
 testingFile  <- "./RawData/testing.csv"
 testingURL <-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 downloadDataset(testingURL, testingFile) # function defined on LoadTrainingData.R
-testing <- read.csv( "./RawData/testing.csv", stringsAsFactors = FALSE)
+testing <- read.csv( "./RawData/testing.csv")
 
 # Predicting answers
 testing <- preprocess(testing)
