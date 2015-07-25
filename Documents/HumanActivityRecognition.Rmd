@@ -1,0 +1,49 @@
+---
+title: "Human Activity Recognition"
+author: "Salvador Ruiz"
+date: "25/07/2015"
+output: html_document
+---
+
+# Human Activity Recognition
+
+## Loading training data
+
+We need to get data for modelling. We've created the function `downloadDataset`for using to download testing data when submission.
+
+
+```{r, cache=TRUE}
+downloadDataset <- function(URL="", destFile="data.csv"){
+# Function to download the csv file with th data
+     if(!file.exists(destFile)){
+          download.file(URL, destFile, method="curl")
+     }else{
+          message("Dataset already downloaded. Download is cancelled")
+     }
+}
+
+trainingURL<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+trainingFile  <- "./RawData/training.csv"
+downloadDataset(trainingURL, trainingFile)
+training <- read.csv("./RawData/training.csv", stringsAsFactors = FALSE)
+```
+
+
+## Cleaning data
+
+The current 
+
+## Preprocess data
+
+
+## Model fitting
+
+## Submission
+
+
+```{r}
+     
+```
+
+
+## Conclusions
