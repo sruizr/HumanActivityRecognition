@@ -1,10 +1,9 @@
 
 # Loading testing data
-testing <- readHARdataset( "testing")
+submission <- readHARdataset( "testing")
 
 # Predicting answers
-testing <- preprocess(testing)
-answers  <-  predict(randomForest, testing)
+answers  <-  predict(rfModel, submission[,mainFeatures])
 
 #Creating files for submission
 pml_write_files = function(x){
