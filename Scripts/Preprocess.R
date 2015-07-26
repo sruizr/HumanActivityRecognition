@@ -1,20 +1,48 @@
-downloadDataset <- function(URL="", destFile="data.csv"){
-     if(!file.exists(destFile)){
-          download.file(URL, destFile, method="curl")
-     }else{
-          message("Dataset already downloaded. Download is cancelled")
-     }
+library(caret)
+
+getFeatures  <- function(data) {
+# Return a logical array with all active features for modelling HAR
+# Input shall be the training set
+     
+     featureNames  <- names(data)
+    
+     # Remove outcome
+     features  <- !(featureNames %in% "classe")
+     
+     # Remove features with non-sense in the model
+     # X: sequential number
+     # user_name: We want to have a general model for all users..
+     # raw_timestamp_part_1 : the model doesn't depends on time
+     # raw_timestamp_part_2: the model doesn't depends on time
+     # cvtd_timestamp: the model doesn't depends on time
+     nonSenseFeatures  <- c("X", "user_name", "raw_timestamp_part_1",
+                              "raw_timestamp_part_2", "cvtd_timestamp")
+     features  <-  features & !(featureNames %in% nonSenseFeatures)
+     message("5 non-sense features has been removed")
+     
+     # Remove features with more than 95% with NAs
+     rowCounts  <- nrow(data)
+     NAcounts  <- colSums(is.na(data))
+     NAfeatures  <- NAcounts > 0.95*rowCounts
+     message(paste(sum(NAfeatures),"columns has more than 95% with NAs"))
+     features  <- features & !NAfeatures
+     
+     # Remove features with Zero varianze
+     nz  <- nearZeroVar(data, saveMetrics = TRUE)$nzv
+     message(paste(sum(nz),"columns are near to zero value"))
+     features  <- features & !nz
+     
+    
+     # Remove correlated features 
+     data  <- data[,features]
+     newFeatureNames  <- names(data)
+     correlatedFeatures  <-  findCorrelation(cor(data))
+     message(length(correlatedFeatures), " features have high correlation to others")
+     features  <- features & !(featureNames %in% newFeatureNames[correlatedFeatures])
+     
+     features
 }
 
-trainingURL<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-testingURL <-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 
-trainingFile  <- "./RawData/training.csv"
-testingFile  <- "./RawData/testing.csv"
-
-downloadDataset(trainingURL, trainingFile)
-downloadDataset(testingURL, testingFile)
-
-training <- read.csv("./RawData/training.csv", stringsAsFactors = FALSE)
-testing <- read.csv( "./RawData/testing.csv", stringsAsFactors = FALSE)
-
+#Chunk 2
+list[training, removedColumns]  <- preprocessHA(training)
