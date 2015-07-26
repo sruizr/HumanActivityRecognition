@@ -59,10 +59,18 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </div>
 
 
-<div id="human-activity-recognition" class="section level1">
-<h1>Human Activity Recognition</h1>
 <div id="executive-summary" class="section level2">
 <h2>Executive summary</h2>
+<p>As requirement for the course of <em>Practical Machine Learning</em> offered by the Johns Hopkins University on Coursera, this stydy has been performed.</p>
+<p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit, it is now possible to collect a large amount of data about personal activity relatively inexpensively. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, our goal will be to use data from accelerometers on the belt, forearm, arm, and dumbbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.</p>
+<p>Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E). Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes.</p>
+<p>Read more about the data set details [here] (<a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a>).</p>
+<p>The targets of this project are:</p>
+<ul>
+<li>Create a suitable model for prediction of activity.</li>
+<li>Evaluate how much accurate the model is using <code>out of sample</code> testing data.</li>
+<li>Using the prediction model, predict 20 different cases for submission to the course.</li>
+</ul>
 </div>
 <div id="loading-data" class="section level2">
 <h2>Loading data</h2>
@@ -87,7 +95,7 @@ readHARdataset  &lt;- function(dataType = &quot;&quot;){
 <h2>Data partition</h2>
 <p>We have two datasets:</p>
 <ul>
-<li><code>plm-training.csv</code> which is the raw data we receive for modelling and evaluate internally our model. From here we’re extracting training and testing dataset.</li>
+<li><code>plm-training.csv</code> which is the raw data we receive for modeling and evaluate internally our model. From here we’re extracting training and testing dataset.</li>
 <li><code>plem-testing.csv</code> which is not really a testing dataset. It’s data for submission results to external evaluation of our model.</li>
 </ul>
 <p>Let’s begin with our raw data. The partition is being 70% for training and 30% for testing</p>
@@ -103,11 +111,11 @@ testing  &lt;- HRdata[-train, ]</code></pre>
 </div>
 <div id="preprocess-data-feature-selection" class="section level2">
 <h2>Preprocess data: feature selection</h2>
-<p>The number of fields for the data is 160. One of them is the outcome <code>classe</code>, so there are 159 potential features. Too many for an eficient modelling.</p>
-<p>It’s needed to select only representative features. These are the criterias for removing features to model:</p>
+<p>The number of fields for the data is 160. One of them is the outcome <code>classe</code>, so there are 159 potential features. Too many for an efficient modeling.</p>
+<p>It’s needed to select only representative features. These are the criteria for removing features to model:</p>
 <ul>
 <li>Features are not related to any temporal parameter.</li>
-<li>We find a model to work with whatever user. User information should’t be a feature for prediction.</li>
+<li>We find a model to work with whatever user. User information shouldn’t be a feature for prediction.</li>
 <li>Fields with more than 95% of values with NAs shouldn’t affect to outcome.</li>
 <li>Fields with near zero variance.</li>
 <li>Fields which are correlated more than 0.90 to other fields</li>
@@ -165,11 +173,11 @@ trOutcome  &lt;- training$classe</code></pre>
 </div>
 <div id="modeling" class="section level2">
 <h2>Modeling</h2>
-<p>The <code>random forest</code> algorimth has been chosen for modelling the prediction. The main reason is that this is one which has the best accuracy for clasification problems.</p>
+<p>The <code>random forest</code> algorithm has been chosen for modelling the prediction. The main reason is that this is one which has the best accuracy for classification problems.</p>
 </div>
 <div id="model-fitting" class="section level2">
 <h2>Model fitting</h2>
-<p>For avoiding overfiting, one of the main risks in <code>random forest</code> algorimth, we’ve defined a cross validation with 4 k-folders.</p>
+<p>For avoiding overfitting, one of the main risks in <code>random forest</code> algorithm, we’ve defined a cross validation with 4 k-folders.</p>
 <pre class="r"><code>rfControl  &lt;- trainControl(method = &quot;cv&quot;, number = 4, allowParallel = TRUE)
 model &lt;- train(x = trFeatures, y = trOutcome, method = &quot;rf&quot;, prox = TRUE, trControl = rfControl)
 model</code></pre>
@@ -194,13 +202,15 @@ model</code></pre>
 </div>
 <div id="model-evaluation" class="section level2">
 <h2>Model evaluation</h2>
+<p>Finally we insert testing data into model for prediction.</p>
 <pre class="r"><code>     tsFeatures &lt;- testing[,features]
      tsReference  &lt;- testing$classe
      tsPrediction  &lt;- predict(model, newdata = tsFeatures)</code></pre>
 <pre><code>## Loading required package: randomForest
 ## randomForest 4.6-10
 ## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre class="r"><code>     confusionMatrix(tsPrediction, tsReference)</code></pre>
+<pre class="r"><code>     cm &lt;- confusionMatrix(tsPrediction, tsReference)
+     cm</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
@@ -232,10 +242,11 @@ model</code></pre>
 ## Detection Rate         0.2845   0.1927   0.1738   0.1635   0.1839
 ## Detection Prevalence   0.2848   0.1934   0.1743   0.1635   0.1840
 ## Balanced Accuracy      0.9998   0.9974   0.9982   0.9990   0.9999</code></pre>
+<p>We get after evaluating testing data an accuracy of 99.83 %, which is a really good result.</p>
 </div>
 <div id="submission" class="section level2">
 <h2>Submission</h2>
-<p>Once we have a proper model, we submit the evaluation data for the</p>
+<p>Once we have a proper model, we submit the evaluation data for the submission on Coursera site.</p>
 <pre class="r"><code># Loading testing data
 submission &lt;- readHARdataset(&quot;testing&quot;)</code></pre>
 <pre><code>## Dataset already downloaded. Download is cancelled</code></pre>
@@ -255,12 +266,15 @@ pml_write_files(answers)     </code></pre>
 </div>
 <div id="conclusions" class="section level2">
 <h2>Conclusions</h2>
-<p>We’ve get a good accuracy There are good results with the following actions:</p>
+<p>We’ve get a good accuracy ( 99.83 %) with the following actions:</p>
 <ul>
-<li>Use the 70% of data for modelling</li>
-<li>Reduce the number of features to 46 from <code>ncol(training) - 1</code></li>
-<li>Use <em>random forest</em> as algorimth with cross validation with 4 k-folders.</li>
+<li>Use the 70% of data for modeling</li>
+<li>Reduce the number of features to 46 from 159</li>
+<li>Use <em>random forest</em> as algorithm with cross validation with 4 k-folders.</li>
 </ul>
+<div id="references" class="section level3">
+<h3>References</h3>
+<p>Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human ’13) . Stuttgart, Germany: ACM SIGCHI, 2013.</p>
 </div>
 </div>
 

@@ -7,7 +7,20 @@ output: html_document
 
 ## Executive summary 
 
+As requirement for the course of *Practical Machine Learning* offered by the Johns Hopkins University on Coursera, this stydy 
+has been performed.
 
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit, it is now possible to collect a large amount of data about personal activity relatively inexpensively. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, our goal will be to use data from accelerometers on the belt, forearm, arm, and dumbbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+
+Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E). Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes.
+
+Read more about the data set details [here] (http://groupware.les.inf.puc-rio.br/har).
+
+The targets of this project are:
+
+* Create a suitable model for prediction of activity.
+* Evaluate how much accurate the model is using `out of sample` testing data.
+* Using the prediction model, predict 20 different cases for submission to the course.
 
 ## Loading data
 
@@ -38,7 +51,7 @@ readHARdataset  <- function(dataType = ""){
 
 We have two datasets:
 
-* `plm-training.csv` which is the raw data we receive for modelling and evaluate internally our model. From here we're extracting training and testing dataset.
+* `plm-training.csv` which is the raw data we receive for modeling and evaluate internally our model. From here we're extracting training and testing dataset.
 * `plem-testing.csv` which is not really a testing dataset. It's data for submission results to external evaluation of our model. 
 
 Let's begin with our raw data. The partition is being 70% for training and 30% for testing
@@ -55,12 +68,12 @@ testing  <- HRdata[-train, ]
 
 ## Preprocess data: feature selection
 
-The number of fields for the data is `r ncol(training)`. One of them is the outcome `classe`, so there are `r ncol(training)-1` potential features. Too many for an eficient modelling.
+The number of fields for the data is `r ncol(training)`. One of them is the outcome `classe`, so there are `r ncol(training)-1` potential features. Too many for an efficient modeling.
 
-It's needed to select only representative features. These are the criterias for removing features to model:
+It's needed to select only representative features. These are the criteria for removing features to model:
 
 * Features are not related to any temporal parameter.
-* We find a model to work with whatever user. User information should't be a feature for prediction.
+* We find a model to work with whatever user. User information shouldn't be a feature for prediction.
 * Fields with more than 95% of values with NAs shouldn't affect to outcome.
 * Fields with near zero variance.
 * Fields which are correlated more than 0.90 to other fields
@@ -121,11 +134,11 @@ After the removal of the secondary fields we get `r ncol(trFeatures)` features f
 
 ## Modeling
 
-The `random forest` algorimth has been chosen for modelling the prediction. The main reason is that this is one which has the best accuracy for clasification problems. 
+The `random forest` algorithm has been chosen for modelling the prediction. The main reason is that this is one which has the best accuracy for classification problems. 
 
 ## Model fitting
 
-For avoiding overfiting, one of the main risks in `random forest` algorimth, we've defined a cross validation with 4 k-folders.
+For avoiding overfitting, one of the main risks in `random forest` algorithm, we've defined a cross validation with 4 k-folders.
 
 ```{r, cache=TRUE}
 
@@ -136,23 +149,23 @@ model
 ```
 
 
-
-
 ## Model evaluation
 
-Finally we insert
+Finally we insert testing data into model for prediction.
 
 ```{r}
      tsFeatures <- testing[,features]
      tsReference  <- testing$classe
      tsPrediction  <- predict(model, newdata = tsFeatures)
-     confusionMatrix(tsPrediction, tsReference)
-```
+     cm <- confusionMatrix(tsPrediction, tsReference)
+     cm
+``` 
 
+We get after evaluating testing data an accuracy of `r paste(round(cm$overall[1]*100,2), "%")`, which is a really good result.
 
 ## Submission
 
-Once we have a proper model, we submit the evaluation data for the 
+Once we have a proper model, we submit the evaluation data for the submission on Coursera site.
 
 ```{r}
 # Loading testing data
@@ -176,8 +189,12 @@ pml_write_files(answers)
 
 ## Conclusions
 
-We've get a good accuracy There are good results with the following actions:
+We've get a good accuracy ( `r paste(round(cm$overall[1]*100,2), "%")`) with the following actions:
 
-* Use the 70% of data for modelling
-* Reduce the number of features to `r ncol(trFeatures)` from ` r ncol(training) - 1` 
-* Use *random forest* as algorimth with cross validation with 4 k-folders.
+* Use the 70% of data for modeling
+* Reduce the number of features to `r ncol(trFeatures)` from `r ncol(training) - 1` 
+* Use *random forest* as algorithm with cross validation with 4 k-folders.
+
+### References
+
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.

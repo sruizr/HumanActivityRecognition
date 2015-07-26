@@ -3,7 +3,7 @@
 submission <- readHARdataset( "testing")
 
 # Predicting answers
-answers  <-  predict(rfModel, submission[,mainFeatures])
+answers  <-  predict(model, submission[,features])
 
 #Creating files for submission
 pml_write_files = function(x){
