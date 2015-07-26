@@ -187,6 +187,8 @@ pml_write_files(answers)
 
 ```
 
+All predictions have been evaluated as correct by Coursera web site.
+
 ## Conclusions
 
 We've get a good accuracy ( `r paste(round(cm$overall[1]*100,2), "%")`) with the following actions:
