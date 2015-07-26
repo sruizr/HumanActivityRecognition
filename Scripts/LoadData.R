@@ -16,5 +16,10 @@ readHARdataset  <- function(dataType = ""){
      read.csv(destFile, header = TRUE, na.strings = c("NA", "", "#DIV/0!"))
 }
 
-#Chunk 2
-training  <- readHARdataset("training")
+library(caret)
+
+HRdata  <- readHARdataset("training")
+set.seed(1234)
+train  <- createDataPartition(HRdata$classe, p=0.6, list = FALSE)
+training  <- HRdata[train, ]
+testing  <- HRdata[-train, ]

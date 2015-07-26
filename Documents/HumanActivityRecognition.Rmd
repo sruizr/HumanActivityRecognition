@@ -5,14 +5,16 @@ date: "25/07/2015"
 output: html_document
 ---
 
-# Human Activity Recognition
-
-## Loading training data
-
-We need to get data for modelling. We've created the function `downloadDataset`for using to download testing data when submission.
+## Executive summary 
 
 
-```{r, cache=TRUE}
+
+## Loading data
+
+There are two functions created for extracting the data from source and loading as dataframes into `R`. 
+
+```{r}
+
 downloadDataset <- function(URL="", destFile="data.csv"){
 # Function to download the csv file with th data
      if(!file.exists(destFile)){
@@ -22,28 +24,160 @@ downloadDataset <- function(URL="", destFile="data.csv"){
      }
 }
 
-trainingURL<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-trainingFile  <- "./RawData/training.csv"
-downloadDataset(trainingURL, trainingFile)
-training <- read.csv("./RawData/training.csv", stringsAsFactors = FALSE)
+readHARdataset  <- function(dataType = ""){
+     URLfile  <- paste0("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-", dataType, ".csv")
+     destFile  <- paste0("../RawData/", dataType, ".csv")
+     downloadDataset(URLfile, destFile)
+     read.csv(destFile, header = TRUE, na.strings = c("NA", "", "#DIV/0!"))
+}
+
 ```
 
 
-## Cleaning data
+## Data partition
 
-The current 
+We have two datasets:
 
-## Preprocess data
+* `plm-training.csv` which is the raw data we receive for modelling and evaluate internally our model. From here we're extracting training and testing dataset.
+* `plem-testing.csv` which is not really a testing dataset. It's data for submission results to external evaluation of our model. 
 
+Let's begin with our raw data. The partition is being 70% for training and 30% for testing
 
-## Model fitting
+```{r}
+library(caret)
 
-## Submission
+HRdata  <- readHARdataset("training")
+set.seed(1234)
+train  <- createDataPartition(HRdata$classe, p=0.7, list = FALSE)
+training  <- HRdata[train, ]
+testing  <- HRdata[-train, ]
+```
+
+## Preprocess data: feature selection
+
+The number of fields for the data is `r ncol(training)`. One of them is the outcome `classe`, so there are `r ncol(training)-1` potential features. Too many for an eficient modelling.
+
+It's needed to select only representative features. These are the criterias for removing features to model:
+
+* Features are not related to any temporal parameter.
+* We find a model to work with whatever user. User information should't be a feature for prediction.
+* Fields with more than 95% of values with NAs shouldn't affect to outcome.
+* Fields with near zero variance.
+* Fields which are correlated more than 0.90 to other fields
 
 
 ```{r}
+getFeatures  <- function(data) {
+# Return a logical array with all active features for modelling HAR
+# Input shall be the training set
      
+     featureNames  <- names(data)
+    
+     # Remove outcome
+     features  <- !(featureNames %in% "classe")
+     
+     # Remove features with nonsense in the model
+     # X: sequential number
+     # user_name: We want to have a general model for all users..
+     # raw_timestamp_part_1 : the model doesn't depends on time
+     # raw_timestamp_part_2: the model doesn't depends on time
+     # cvtd_timestamp: the model doesn't depends on time
+     nonsenseFeatures  <- c("X", "user_name", "raw_timestamp_part_1",
+                              "raw_timestamp_part_2", "cvtd_timestamp")
+     features  <-  features & !(featureNames %in% nonsenseFeatures)
+     message("5 non-sense features has been removed")
+     
+     # Remove features with more than 95% with NAs
+     rowCounts  <- nrow(data)
+     NAcounts  <- colSums(is.na(data))
+     NAfeatures  <- NAcounts > 0.95*rowCounts
+     message(paste(sum(NAfeatures),"columns has more than 95% with NAs"))
+     features  <- features & !NAfeatures
+     
+     # Remove features with Zero varianze
+     nz  <- nearZeroVar(data, saveMetrics = TRUE)$nzv
+     message(paste(sum(nz),"columns are near to zero value"))
+     features  <- features & !nz
+     
+    
+     # Remove correlated features 
+     data  <- data[,features]
+     newFeatureNames  <- names(data)
+     correlatedFeatures  <-  findCorrelation(cor(data), cutoff = 0.90)
+     message(length(correlatedFeatures), " features have high correlation to others")
+     features  <- features & !(featureNames %in% newFeatureNames[correlatedFeatures])
+     
+     features
+}
+```
+
+```{r}
+features  <- getFeatures(training)
+trFeatures  <- training[, features]
+trOutcome  <- training$classe
+```
+
+After the removal of the secondary fields we get `r ncol(trFeatures)` features for modelling. We've reduced to a third part the number of variables to model so this preprocessing will increase a lot performance on modelling.
+
+## Modeling
+
+The `random forest` algorimth has been chosen for modelling the prediction. The main reason is that this is one which has the best accuracy for clasification problems. 
+
+## Model fitting
+
+For avoiding overfiting, one of the main risks in `random forest` algorimth, we've defined a cross validation with 4 k-folders.
+
+```{r, cache=TRUE}
+
+rfControl  <- trainControl(method = "cv", number = 4, allowParallel = TRUE)
+model <- train(x = trFeatures, y = trOutcome, method = "rf", prox = TRUE, trControl = rfControl)
+model
+
 ```
 
 
+
+
+## Model evaluation
+
+Finally we insert
+
+```{r}
+     tsFeatures <- testing[,features]
+     tsReference  <- testing$classe
+     tsPrediction  <- predict(model, newdata = tsFeatures)
+     confusionMatrix(tsPrediction, tsReference)
+```
+
+
+## Submission
+
+Once we have a proper model, we submit the evaluation data for the 
+
+```{r}
+# Loading testing data
+submission <- readHARdataset("testing")
+
+# Predicting answers
+answers  <-  predict(model, submission[,features])
+
+#Creating files for submission
+pml_write_files = function(x){
+     n = length(x)
+     for(i in 1:n){
+          filename = paste0("../Submission/problem_id_",i,".txt")
+          write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+     }
+}
+ 
+pml_write_files(answers)     
+
+```
+
 ## Conclusions
+
+We've get a good accuracy There are good results with the following actions:
+
+* Use the 70% of data for modelling
+* Reduce the number of features to `r ncol(trFeatures)` from ` r ncol(training) - 1` 
+* Use *random forest* as algorimth with cross validation with 4 k-folders.

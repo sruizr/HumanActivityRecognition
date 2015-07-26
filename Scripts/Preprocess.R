@@ -1,5 +1,3 @@
-library(caret)
-
 getFeatures  <- function(data) {
 # Return a logical array with all active features for modelling HAR
 # Input shall be the training set
@@ -36,13 +34,14 @@ getFeatures  <- function(data) {
      # Remove correlated features 
      data  <- data[,features]
      newFeatureNames  <- names(data)
-     correlatedFeatures  <-  findCorrelation(cor(data))
+     correlatedFeatures  <-  findCorrelation(cor(data), cutoff = 0.90)
      message(length(correlatedFeatures), " features have high correlation to others")
      features  <- features & !(featureNames %in% newFeatureNames[correlatedFeatures])
      
      features
 }
 
+filter  <- getFeatures(training)
+filter[160]  <- TRUE #Added outcome
+training  <- training[filter]
 
-#Chunk 2
-list[training, removedColumns]  <- preprocessHA(training)
